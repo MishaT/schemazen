@@ -44,7 +44,7 @@ namespace SchemaZen.Library.Models {
 
 		private string ScriptQuotedIdAndAnsiNulls(Database db, bool databaseDefaults) {
 			var script = "";
-			var defaultQuotedId = !QuotedId;
+/*			var defaultQuotedId = !QuotedId;
 			if (db?.FindProp("QUOTED_IDENTIFIER") != null) {
 				defaultQuotedId = db.FindProp("QUOTED_IDENTIFIER").Value == "ON";
 			}
@@ -62,7 +62,7 @@ namespace SchemaZen.Library.Models {
 			if (defaultAnsiNulls != AnsiNull) {
 				script +=
 					$"SET ANSI_NULLS {((databaseDefaults ? defaultAnsiNulls : AnsiNull) ? "ON" : "OFF")} {Environment.NewLine}GO{Environment.NewLine}";
-			}
+			}*/
 
 			return script;
 		}

@@ -464,25 +464,39 @@ from #ScriptedRoles
 		private void LoadRoutines(SqlCommand cm) {
 			//get routines
 			cm.CommandText = @"
-					select
-						s.name as schemaName,
-						o.name as routineName,
-						o.type_desc,
-						m.definition,
-						m.uses_ansi_nulls,
-						m.uses_quoted_identifier,
-						isnull(s2.name, s3.name) as tableSchema,
-						isnull(t.name, v.name) as tableName,
-						tr.is_disabled as trigger_disabled
-					from sys.sql_modules m
-						inner join sys.objects o on m.object_id = o.object_id
-						inner join sys.schemas s on s.schema_id = o.schema_id
-						left join sys.triggers tr on m.object_id = tr.object_id
-						left join sys.tables t on tr.parent_id = t.object_id
-						left join sys.views v on tr.parent_id = v.object_id
-						left join sys.schemas s2 on s2.schema_id = t.schema_id
-						left join sys.schemas s3 on s3.schema_id = v.schema_id
-					where objectproperty(o.object_id, 'IsMSShipped') = 0
+				SELECT s.name                   AS schemaName
+					  ,o.name                   AS routineName
+					  ,o.type_desc
+					  --,m.definition
+					  ,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(m.definition
+							  ,'create procedure', 'CREATE OR ALTER PROCEDURE') 
+							  ,'create  procedure', 'CREATE OR ALTER PROCEDURE') 
+							  ,'create   procedure', 'CREATE OR ALTER PROCEDURE') 
+							  ,'create proc ', 'CREATE OR ALTER PROCEDURE ')
+							  ,'create function', 'CREATE OR ALTER FUNCTION')
+							  ,'create  function', 'CREATE OR ALTER FUNCTION')
+							  ,'create   function', 'CREATE OR ALTER FUNCTION')
+							  ,'create trigger', 'CREATE OR ALTER TRIGGER')
+							  ,'create  trigger', 'CREATE OR ALTER TRIGGER')
+							  ,'create   trigger', 'CREATE OR ALTER TRIGGER')
+							  ,'create view', 'CREATE OR ALTER VIEW')
+							  ,'create  view', 'CREATE OR ALTER VIEW')
+							  ,'create   view', 'CREATE OR ALTER VIEW')
+							  AS definition
+					  ,m.uses_ansi_nulls
+					  ,m.uses_quoted_identifier
+					  ,ISNULL(s2.name, s3.name) AS tableSchema
+					  ,ISNULL(t.name, v.name)   AS tableName
+					  ,tr.is_disabled           AS trigger_disabled
+					FROM sys.sql_modules    m
+					INNER JOIN sys.objects  o ON o.object_id = m.object_id
+					INNER JOIN sys.schemas  s ON s.schema_id = o.schema_id
+					LEFT JOIN sys.triggers tr ON m.object_id = tr.object_id
+					LEFT JOIN sys.tables    t ON t.object_id = tr.parent_id
+					LEFT JOIN sys.views     v ON v.object_id = tr.parent_id
+					LEFT JOIN sys.schemas  s2 ON s2.schema_id = t.schema_id
+					LEFT JOIN sys.schemas  s3 ON s3.schema_id = v.schema_id
+				   WHERE OBJECTPROPERTY(o.object_id, 'IsMSShipped') = 0
 					";
 			using (var dr = cm.ExecuteReader()) {
 				while (dr.Read()) {
@@ -542,7 +556,8 @@ from #ScriptedRoles
 			using (var dr = cm.ExecuteReader()) {
 				while (dr.Read()) {
 					var t = FindTable((string)dr["TABLE_NAME"], (string)dr["TABLE_SCHEMA"]);
-					var constraint = Constraint.CreateCheckedConstraint(
+					var constraint = Constraint.
+						CreateCheckedConstraint(
 						(string)dr["CONSTRAINT_NAME"],
 						Convert.ToBoolean(dr["NotForReplication"]),
 						(string)dr["CHECK_CLAUSE"]
